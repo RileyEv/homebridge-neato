@@ -2,6 +2,7 @@ import {API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, P
 import NeatoApi from "node-botvac";
 import {PLATFORM_NAME, PLUGIN_NAME} from "./settings";
 import {NeatoVacuumRobotAccessory} from "./accessories/NeatoVacuumRobot";
+import { OrbitalClient } from "./orbital-api/client";
 
 /**
  * HomebridgePlatform
@@ -38,7 +39,13 @@ export class HomebridgeNeatoPlatform implements DynamicPlatformPlugin
 
 	async discoverRobots()
 	{
-		const client = new NeatoApi.Client();
+		let client;
+		if (this.config.orbitalAPI) {
+			client = new OrbitalClient();
+		} else {
+			client = new NeatoApi.Client();
+		}
+
 		let robots;
 
 		// Login

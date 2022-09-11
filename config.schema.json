@@ -98,6 +98,12 @@
           "findMe",
           "cleanSpot"
         ]
+      },
+      "orbitalAPI": {
+        "title": "Use orbital API (D8/9/10)",
+        "description": "Use API for the newer variants of neato robots (D8/9/10)",
+        "type": "boolean",
+        "default": false
       }
     }
   },
