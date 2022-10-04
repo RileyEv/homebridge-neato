@@ -76,6 +76,10 @@ interface Schedule {
     test: string;
 }
 
+interface AvailableServices {
+    test: string;
+}
+
 export class Robot {
     private token: string;
     private state: UserRobotResponse;
@@ -98,12 +102,17 @@ export class Robot {
     public meta: unknown;
     public _serial: string;
     public name: string;
-    public availableServices: string;
+    public availableServices: AvailableServices;
 
 
     constructor(token: string, userRobotResponse: UserRobotResponse){
         this.token = token;
         this.state = userRobotResponse;
+
+        this.meta = "";
+        this._serial = userRobotResponse.serial;
+        this.name = userRobotResponse.name;
+        this.availableServices = {test: ""}
     }
 
     getState(callback: (error: Error, state: RobotState | undefined) => void) {
