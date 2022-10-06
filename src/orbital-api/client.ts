@@ -1,35 +1,10 @@
 import axios from "axios";
 import qs from "qs";
 
-/*
- * Client for the Neato Orbital API
- * As defined in https://github.com/RileyEv/neato-api
- */
+import * as types from "./api-types";
+import {login, getRobots} from "./api"
 
-const ORBITAL_API_ENDPOINT = "https://orbital.neatocloud.com";
-const ORBITAL_API_DEFAULT_HEADERS = {
-    Accept: "application/vnd.neato.orbital-http.v1+json",
-};
 
-export interface LoginResponse {
-    token: string;
-}
-
-export type UserRobotListResponse = UserRobotResponse[];
-export interface UserRobotResponse {
-    birth_date: string;
-    firmware: string;
-    mac_address: string;
-    model_name: string; // Could be translated into a object with features
-    name: string;
-    public_key: string;
-    robotNumber: string;
-    serial: string;
-    timezone: string;
-    user_id: string;
-    uuid: string;
-    vendor: string;
-}
 
 export class OrbitalClient {
     token?: string;
@@ -39,12 +14,8 @@ export class OrbitalClient {
         if (this.token && !force) {
             promise = Promise.resolve(this.token);
         } else {
-            promise = axios.post<LoginResponse>(
-                ORBITAL_API_ENDPOINT + "/vendors/neato/sessions",
-                qs.stringify({email: email, password: password}),
-                {headers: {...ORBITAL_API_DEFAULT_HEADERS, "content-type": "application/x-www-form-urlencoded"}},
-            ).then(res => {
-                this.token = res.data.token;
+            promise = login(email, password).then(res => {
+                this.token = res.token;
                 return this.token;
             });
         }
@@ -58,16 +29,13 @@ export class OrbitalClient {
             return;
         }
 
-        axios.get<UserRobotListResponse>(
-            ORBITAL_API_ENDPOINT + "/users/me/robots",
-            {headers: {...ORBITAL_API_DEFAULT_HEADERS, Authorization: "Token " + token}},
-        ).then(res => {
-            callback(null, res.data.map(userRobotResponse => new Robot(token, userRobotResponse)));
+        getRobots(token).then(res => {
+            callback(null, res.map(userRobotResponse => new Robot(token, userRobotResponse)));
         });
     }
 }
 
-type Error = any | undefined
+type Error = any | undefined;
 
 interface RobotState {
     test: string;
@@ -82,7 +50,7 @@ interface AvailableServices {
 
 export class Robot {
     private token: string;
-    private state: UserRobotResponse;
+    private state: types.UserRobotResponse;
 
     public isBinFull = false;
     public isCharging = false;
@@ -105,14 +73,14 @@ export class Robot {
     public availableServices: AvailableServices;
 
 
-    constructor(token: string, userRobotResponse: UserRobotResponse){
+    constructor(token: string, userRobotResponse: types.UserRobotResponse){
         this.token = token;
         this.state = userRobotResponse;
 
         this.meta = "";
         this._serial = userRobotResponse.serial;
         this.name = userRobotResponse.name;
-        this.availableServices = {test: ""}
+        this.availableServices = {test: ""};
     }
 
     getState(callback: (error: Error, state: RobotState | undefined) => void) {
